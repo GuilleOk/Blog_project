@@ -1,19 +1,40 @@
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
-import { Link } from 'react-router'
-
-const navigation = [
-  { name: 'Home', href: '/', current: true },
-  { name: 'Create posts', href: '/createPosts', current: false },
-  { name: 'Login', href: '/login', current: false },
-  { name: 'Register', href: '/register', current: false },
-]
+import { useContext } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router'
+import { LoginContext } from '../contexts/LoginContext'
+import { signOut } from 'firebase/auth'
+import { auth } from '../firebase_config'
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
 export default function Navbar() {
+
+  const location = useLocation()
+
+  const navigation = [
+    { name: 'Home', href: '/', current: location.pathname === '/' },
+    { name: 'Create posts', href: '/createPosts', current: location.pathname === '/createPosts' },
+    { name: 'Login', href: '/login', current: location.pathname === '/login' },
+    { name: 'Register', href: '/register', current: location.pathname === '/register' },
+  ]
+
+  const navigate = useNavigate()
+  const { state, logout } = useContext(LoginContext)
+
+  const handleSignOut = async() => {
+    try {
+      await signOut(auth)
+      logout()
+      navigate('/')
+    } catch (error) {
+      console.error(error)
+    }
+    
+  }
+
   return (
     <Disclosure as="nav" className="bg-gray-800">
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
@@ -54,15 +75,6 @@ export default function Navbar() {
             </div>
           </div>
           <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-            <button
-              type="button"
-              className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden"
-            >
-              <span className="absolute -inset-1.5" />
-              <span className="sr-only">View notifications</span>
-              <BellIcon aria-hidden="true" className="size-6" />
-            </button>
-
             {/* Profile dropdown */}
             <Menu as="div" className="relative ml-3">
               <div>
@@ -77,16 +89,16 @@ export default function Navbar() {
                 </MenuButton>
               </div>
               <MenuItems
+                className={state.isLogged ? 'absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 transition focus:outline-hidden data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in' : 'hidden'}
                 transition
-                className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 transition focus:outline-hidden data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
               >
                 <MenuItem>
-                  <div
-                    href="#"
-                    className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
+                  <button
+                    onClick={handleSignOut}
+                    className={state.isLogged ? 'block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden' : 'hidden'}
                   >
                     Sign out
-                  </div>
+                  </button>
                 </MenuItem>
               </MenuItems>
             </Menu>
@@ -103,7 +115,7 @@ export default function Navbar() {
               href={item.href}
               aria-current={item.current ? 'page' : undefined}
               className={classNames(
-                item.current ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                item.current && (!state.isLogged && item.name === 'Login' ||!state.isLogged && item.name === 'Register') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white',
                 'block rounded-md px-3 py-2 text-base font-medium',
               )}
             >

@@ -5,16 +5,16 @@ import Login from "./pages/Login"
 import Register from "./pages/Register"
 import CreatePosts from "./pages/CreatePosts"
 import Navbar from "./components/Navbar"
-import { useContext, useEffect } from "react"
-import { LoginContext } from "./contexts/LoginContext"
+import { useEffect } from "react"
+import { auth } from "./firebase_config"
 
 function App() {
 
-  const {state} = useContext(LoginContext)
+
 
   useEffect(() => {
-    console.log(state)
-  }, [state])
+    console.log(auth.currentUser)
+  }, [auth])
   
 
   return (
